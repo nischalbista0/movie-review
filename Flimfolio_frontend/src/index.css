@@ -1,0 +1,115 @@
+@import url("https://fonts.googleapis.com/css2?family=Dongle:wght@300;400&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+input {
+  font-family: "Poppins", sans-serif;
+}
+
+.texts {
+  font-family: "Dongle", sans-serif;
+}
+
+.sidefonts {
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+}
+
+.profilefonts {
+  font-family: "Poppins", sans-serif;
+  font-weight: 400;
+}
+
+.watchlistfonts {
+  font-family: "Poppins", sans-serif;
+}
+
+.moviefonts {
+  font-family: "Poppins", sans-serif;
+}
+
+.react {
+  display: block;
+}
+
+.react-me {
+  font-family: Helvetica;
+  cursor: pointer;
+  display: block;
+  position: relative;
+}
+
+.react-box {
+  list-style-type: none;
+  margin: 0;
+  display: block;
+}
+
+.react-box ul {
+  margin: 0;
+  padding: 0;
+}
+
+.react-box li {
+  display: inline-block;
+  width: 48px;
+  height: 48px;
+  transform: scale(.8) translateY(0);
+  background: url("https://static.xx.fbcdn.net/rsrc.php/v2/yh/r/sqhTN9lgaYm.png") no-repeat;
+  background-size: cover;
+  transition: transform 200ms ease;
+  position: relative;
+}
+
+.react-box li.like {
+  background-position: 0 -144px;
+}
+
+.react-box li.love {
+  background-position: 0 -192px;
+}
+
+.react-box li.haha {
+  background-position: 0 -96px;
+}
+
+.react-box li.wow {
+  background-position: 0 -288px;
+}
+
+.react-box li.sad {
+  background-position: 0 -240px;
+}
+
+.react-box li.angry {
+  background-position: 0 0;
+}
+
+.react-box li:before {
+  content: attr(data-hover);
+  position: absolute;
+  bottom: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #fff;
+  padding: 0 8px;
+  border-radius: 20px;
+  font-family: Helvetica, Verdana, Arial;
+  font-weight: bold;
+  line-height: 20px;
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.76);
+  display: none;
+}
+
+.react-box li:hover {
+  transform: scale(1) translateY(-5px);
+  transition: transform 200ms ease;
+}
+
+.react-box li:hover:before {
+  display: inline-block;
+}
