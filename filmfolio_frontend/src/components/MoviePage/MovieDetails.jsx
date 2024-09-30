@@ -5,6 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { UserContext } from "../../context/UserContext";
 import { CastBody } from "./CastBody";
 import ReviewBody from "./ReviewBody";
+import toast, { Toaster } from "react-hot-toast";
 
 export const MovieDetails = () => {
   const { movieId } = useParams();
@@ -225,7 +226,10 @@ export const MovieDetails = () => {
         }
       );
 
+      toast.success("Review deleted successfully");
+
       setMovieDetails((prevMovieDetails) => {
+        console.log(prevMovieDetails);
         const updatedReviews = prevMovieDetails.data[0].topReviews.filter(
           (review) => review._id !== reviewID
         );
@@ -255,6 +259,8 @@ export const MovieDetails = () => {
 
   return (
     <>
+      <Toaster position="top-center" reverseOrder={false} />
+
       <img
         src={
           movieDetails.data?.[0]?.movie.backdrop_path == null
@@ -365,24 +371,28 @@ export const MovieDetails = () => {
             No reviews yet. Be the first one to write a review.
           </p>
         ) : (
-          movieDetails.data?.[0]?.topReviews.map((review) => (
-            <ReviewBody
-              key={review.id}
-              user={review.user}
-              review={review.review}
-              reviewDetails={review}
-              rating={review.rating}
-              likes={review.likes}
-              isLiked={review.isLiked}
-              isUserLoggedIn={review.isUserLoggedIn}
-              onLikeUnlike={() => handleLikeUnlike(review._id, review.isLiked)}
-              onReaction={(reaction) =>
-                handleReaction(review._id, user.user[0]._id, reaction)
-              }
-              onUpdateReview={() => handleUpdateReview(review._id)}
-              onDeleteReview={() => handleDeleteReview(review._id)}
-            />
-          ))
+          movieDetails.data?.[0]?.topReviews
+            .sort((a, b) => b.rating - a.rating)
+            .map((review) => (
+              <ReviewBody
+                key={review.id}
+                user={review.user}
+                review={review.review}
+                reviewDetails={review}
+                rating={review.rating}
+                likes={review.likes}
+                isLiked={review.isLiked}
+                isUserLoggedIn={review.isUserLoggedIn}
+                onLikeUnlike={() =>
+                  handleLikeUnlike(review._id, review.isLiked)
+                }
+                onReaction={(reaction) =>
+                  handleReaction(review._id, user.user[0]._id, reaction)
+                }
+                onUpdateReview={() => handleUpdateReview(review._id)}
+                onDeleteReview={() => handleDeleteReview(review._id)}
+              />
+            ))
         )}
 
         <div className="flex flex-col gap-3">

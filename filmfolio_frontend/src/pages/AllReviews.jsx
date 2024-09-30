@@ -1,8 +1,9 @@
 import axios from "axios";
 import React, { useContext, useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import ReviewBody from "../components/MoviePage/ReviewBody";
 import { UserContext } from "../context/UserContext";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function AllReviews() {
   const location = useLocation();
@@ -13,6 +14,8 @@ export default function AllReviews() {
   const [reviews, setReviews] = useState([]);
 
   const { user } = useContext(UserContext);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     axios
@@ -29,62 +32,17 @@ export default function AllReviews() {
       });
   }, []);
 
-  // Function to handle liking/unliking a review
-  const handleLikeUnlike = async (reviewID, isLiked) => {
-    try {
-      const url = isLiked
-        ? `http://localhost:3001/movies/${movieId}/reviews/${reviewID}/unlike`
-        : `http://localhost:3001/movies/${movieId}/reviews/${reviewID}/like`;
-
-      await axios.post(
-        url,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-
-      setMovieDetails((prevMovieDetails) => {
-        const updatedReviews = prevMovieDetails.data[0].topReviews.map(
-          (review) => {
-            if (review._id === reviewID) {
-              return {
-                ...review,
-                likes: isLiked ? review.likes - 1 : review.likes + 1,
-                isLiked: !isLiked,
-              };
-            }
-            return review;
-          }
-        );
-
-        return {
-          ...prevMovieDetails,
-          data: [
-            {
-              ...prevMovieDetails.data[0],
-              topReviews: updatedReviews,
-            },
-          ],
-        };
-      });
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
   const handleUpdateReview = (reviewID) => {
     navigate("/updateReview", {
       state: {
-        movieDetails: movieDetails.data?.[0],
+        movieDetails: movieDetails,
         reviewID: reviewID,
       },
     });
   };
 
   const handleDeleteReview = async (reviewID) => {
+    const movieId = movieDetails.id;
     try {
       await axios.delete(
         `http://localhost:3001/movies/${movieId}/reviews/${reviewID}`,
@@ -95,21 +53,9 @@ export default function AllReviews() {
         }
       );
 
-      setMovieDetails((prevMovieDetails) => {
-        const updatedReviews = prevMovieDetails.data[0].topReviews.filter(
-          (review) => review._id !== reviewID
-        );
+      toast.success("Review deleted successfully");
 
-        return {
-          ...prevMovieDetails,
-          data: [
-            {
-              ...prevMovieDetails.data[0],
-              topReviews: updatedReviews,
-            },
-          ],
-        };
-      });
+      window.location.reload();
     } catch (error) {
       console.log(error);
     }
@@ -174,6 +120,8 @@ export default function AllReviews() {
 
   return (
     <div className="flex flex-col gap-4 px-10 py-8">
+      <Toaster position="top-center" reverseOrder={false} />
+
       <div className="flex items-center mb-3">
         <div className="absolute top-3 left-3">
           <button
@@ -207,22 +155,23 @@ export default function AllReviews() {
           </p>{" "}
         </div>
       ) : (
-        reviews.data?.map((review) => (
-          <ReviewBody
-            key={review.id}
-            user={review.user}
-            review={review.review}
-            reviewDetails={review}
-            rating={review.rating}
-            likes={review.likes}
-            isLiked={review.isLiked}
-            isUserLoggedIn={review.isUserLoggedIn}
-            // onLikeUnlike={() => handleLikeUnlike(review._id, review.isLiked)}
-            onReaction={(reaction) => handleReaction(review._id, reaction)}
-            // onUpdateReview={() => handleUpdateReview(review._id)}
-            // onDeleteReview={() => handleDeleteReview(review._id)}
-          />
-        ))
+        reviews.data
+          ?.sort((a, b) => b.rating - a.rating)
+          .map((review) => (
+            <ReviewBody
+              key={review.id}
+              user={review.user}
+              review={review.review}
+              reviewDetails={review}
+              rating={review.rating}
+              likes={review.likes}
+              isLiked={review.isLiked}
+              isUserLoggedIn={review.isUserLoggedIn}
+              onReaction={(reaction) => handleReaction(review._id, reaction)}
+              onUpdateReview={() => handleUpdateReview(review._id)}
+              onDeleteReview={() => handleDeleteReview(review._id)}
+            />
+          ))
       )}
     </div>
   );

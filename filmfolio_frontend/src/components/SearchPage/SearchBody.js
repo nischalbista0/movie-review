@@ -58,8 +58,7 @@ export const SearchBody = ({ setActiveTab, setMovie }) => {
                   className="cursor-pointer flex items-center gap-3 w-full h-[100px] bg-white p-6 rounded-xl mb-2"
                   onClick={() => {
                     if (user) {
-                      setActiveTab("movie details");
-                      setMovie(result);
+                      navigate(`/movie/${result.id}`);
                     } else {
                       navigate("/login");
                     }
