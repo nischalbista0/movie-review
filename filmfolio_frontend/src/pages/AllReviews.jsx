@@ -6,7 +6,10 @@ import { UserContext } from "../context/UserContext";
 
 export default function AllReviews() {
   const location = useLocation();
-  const movieDetails = location.state?.movieDetails;
+  // const movieDetails = location.state?.movieDetails;
+  const [movieDetails, setMovieDetails] = useState(
+    location.state?.movieDetails
+  );
   const [reviews, setReviews] = useState([]);
 
   const { user } = useContext(UserContext);
@@ -27,11 +30,11 @@ export default function AllReviews() {
   }, []);
 
   // Function to handle liking/unliking a review
-  const handleLikeUnlikeReview = async (reviewID, isLiked) => {
+  const handleLikeUnlike = async (reviewID, isLiked) => {
     try {
       const url = isLiked
-        ? `http://localhost:3001/movies/${movieDetails.id}/reviews/${reviewID}/unlike`
-        : `http://localhost:3001/movies/${movieDetails.id}/reviews/${reviewID}/like`;
+        ? `http://localhost:3001/movies/${movieId}/reviews/${reviewID}/unlike`
+        : `http://localhost:3001/movies/${movieId}/reviews/${reviewID}/like`;
 
       await axios.post(
         url,
@@ -43,16 +46,70 @@ export default function AllReviews() {
         }
       );
 
-      // Fetch the updated reviews and set them in the component state
-      const updatedReviewsResponse = await axios.get(
-        `http://localhost:3001/movies/${movieDetails.id}/reviews`,
+      setMovieDetails((prevMovieDetails) => {
+        const updatedReviews = prevMovieDetails.data[0].topReviews.map(
+          (review) => {
+            if (review._id === reviewID) {
+              return {
+                ...review,
+                likes: isLiked ? review.likes - 1 : review.likes + 1,
+                isLiked: !isLiked,
+              };
+            }
+            return review;
+          }
+        );
+
+        return {
+          ...prevMovieDetails,
+          data: [
+            {
+              ...prevMovieDetails.data[0],
+              topReviews: updatedReviews,
+            },
+          ],
+        };
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleUpdateReview = (reviewID) => {
+    navigate("/updateReview", {
+      state: {
+        movieDetails: movieDetails.data?.[0],
+        reviewID: reviewID,
+      },
+    });
+  };
+
+  const handleDeleteReview = async (reviewID) => {
+    try {
+      await axios.delete(
+        `http://localhost:3001/movies/${movieId}/reviews/${reviewID}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         }
       );
-      setReviews(updatedReviewsResponse.data);
+
+      setMovieDetails((prevMovieDetails) => {
+        const updatedReviews = prevMovieDetails.data[0].topReviews.filter(
+          (review) => review._id !== reviewID
+        );
+
+        return {
+          ...prevMovieDetails,
+          data: [
+            {
+              ...prevMovieDetails.data[0],
+              topReviews: updatedReviews,
+            },
+          ],
+        };
+      });
     } catch (error) {
       console.log(error);
     }
@@ -160,10 +217,10 @@ export default function AllReviews() {
             likes={review.likes}
             isLiked={review.isLiked}
             isUserLoggedIn={review.isUserLoggedIn}
-            onLikeUnlike={() => handleLikeUnlike(review._id, review.isLiked)}
+            // onLikeUnlike={() => handleLikeUnlike(review._id, review.isLiked)}
             onReaction={(reaction) => handleReaction(review._id, reaction)}
-            onUpdateReview={() => handleUpdateReview(review._id)}
-            onDeleteReview={() => handleDeleteReview(review._id)}
+            // onUpdateReview={() => handleUpdateReview(review._id)}
+            // onDeleteReview={() => handleDeleteReview(review._id)}
           />
         ))
       )}
