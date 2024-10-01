@@ -7,14 +7,13 @@ import toast, { Toaster } from "react-hot-toast";
 
 export default function AllReviews() {
   const location = useLocation();
-  // const movieDetails = location.state?.movieDetails;
   const [movieDetails, setMovieDetails] = useState(
     location.state?.movieDetails
   );
-  const [reviews, setReviews] = useState([]);
+  const [reviews, setReviews] = useState({ data: [] }); // Initialize reviews as an object with an empty data array
+  const [sortOrder, setSortOrder] = useState("highest"); // Default sort order
 
   const { user } = useContext(UserContext);
-
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -52,9 +51,7 @@ export default function AllReviews() {
           },
         }
       );
-
       toast.success("Review deleted successfully");
-
       window.location.reload();
     } catch (error) {
       console.log(error);
@@ -62,8 +59,6 @@ export default function AllReviews() {
   };
 
   const handleReaction = async (reviewID, reactionType) => {
-    console.log(reactionType);
-
     if (!user.user || !user.user[0]._id) {
       console.error("User is not authenticated or user ID is missing");
       return;
@@ -71,7 +66,6 @@ export default function AllReviews() {
 
     try {
       const review = reviews.data.find((review) => review._id === reviewID);
-
       if (!review) {
         console.error("Review not found");
         return;
@@ -85,11 +79,9 @@ export default function AllReviews() {
       let method;
 
       if (userReactionExists) {
-        // Remove reaction
         url = `http://localhost:3001/movies/${movieDetails.id}/reviews/${reviewID}/reactions`;
         method = "DELETE";
       } else {
-        // Add reaction
         url = `http://localhost:3001/movies/${movieDetails.id}/reviews/${reviewID}/reactions`;
         method = "POST";
       }
@@ -103,7 +95,6 @@ export default function AllReviews() {
         },
       });
 
-      // Fetch the updated reviews and set them in the component state
       const updatedReviewsResponse = await axios.get(
         `http://localhost:3001/movies/${movieDetails.id}/reviews`,
         {
@@ -117,6 +108,21 @@ export default function AllReviews() {
       console.error("Error handling reaction:", error);
     }
   };
+
+  // Handle sort order change
+  const handleSortChange = (event) => {
+    setSortOrder(event.target.value);
+  };
+
+  // Sorting logic based on sortOrder
+  const sortedReviews = reviews.data?.sort((a, b) => {
+    if (sortOrder === "highest") {
+      return b.rating - a.rating;
+    } else if (sortOrder === "lowest") {
+      return a.rating - b.rating;
+    }
+    return 0;
+  });
 
   return (
     <div className="flex flex-col gap-4 px-10 py-8">
@@ -148,30 +154,43 @@ export default function AllReviews() {
         </div>
       </div>
 
-      {reviews.data?.length === 0 ? (
+      <div className="w-full flex items-center justify-end mb-4">
+        <label htmlFor="sortReviews" className="mr-2 text-sm font-medium">
+          Sort reviews by:
+        </label>
+        <select
+          id="sortReviews"
+          className="p-2 border rounded"
+          value={sortOrder}
+          onChange={handleSortChange}
+        >
+          <option value="highest">Highest to Lowest</option>
+          <option value="lowest">Lowest to Highest</option>
+        </select>
+      </div>
+
+      {reviews.data && reviews.data.length === 0 ? (
         <div className="flex flex-col items-center justify-center">
           <p className="text-sm sm:text-base md:text-lg moviefonts">
             No reviews yet. Be the first one to write a review.
-          </p>{" "}
+          </p>
         </div>
       ) : (
-        reviews.data
-          ?.sort((a, b) => b.rating - a.rating)
-          .map((review) => (
-            <ReviewBody
-              key={review.id}
-              user={review.user}
-              review={review.review}
-              reviewDetails={review}
-              rating={review.rating}
-              likes={review.likes}
-              isLiked={review.isLiked}
-              isUserLoggedIn={review.isUserLoggedIn}
-              onReaction={(reaction) => handleReaction(review._id, reaction)}
-              onUpdateReview={() => handleUpdateReview(review._id)}
-              onDeleteReview={() => handleDeleteReview(review._id)}
-            />
-          ))
+        sortedReviews?.map((review) => (
+          <ReviewBody
+            key={review.id}
+            user={review.user}
+            review={review.review}
+            reviewDetails={review}
+            rating={review.rating}
+            likes={review.likes}
+            isLiked={review.isLiked}
+            isUserLoggedIn={review.isUserLoggedIn}
+            onReaction={(reaction) => handleReaction(review._id, reaction)}
+            onUpdateReview={() => handleUpdateReview(review._id)}
+            onDeleteReview={() => handleDeleteReview(review._id)}
+          />
+        ))
       )}
     </div>
   );

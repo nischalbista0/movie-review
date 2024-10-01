@@ -15,13 +15,22 @@ export const MovieDetails = () => {
   const navigate = useNavigate();
 
   const [movieDetails, setMovieDetails] = useState({});
-  const [isWatchlisted, setIsWatchlisted] = useState(false); // New state to track watchlist status
-  const [loading, setLoading] = useState(true); // New state to track loading
+  const [isWatchlisted, setIsWatchlisted] = useState(false);
+  const [loading, setLoading] = useState(true);
   const { user } = useContext(UserContext);
+  const [sortOption, setSortOption] = useState("highest");
+
+  const sortReviews = (reviews) => {
+    if (sortOption === "highest") {
+      return reviews.sort((a, b) => b.rating - a.rating);
+    }
+    if (sortOption === "lowest") {
+      return reviews.sort((a, b) => a.rating - b.rating);
+    }
+    return reviews;
+  };
 
   const reviewSummary = movieDetails?.data?.[0]?.reviewSummary || "";
-
-  console.log(reviewSummary);
 
   // Convert the reviewSummary to an array if it exists
   const summaryArray = reviewSummary
@@ -360,39 +369,44 @@ export const MovieDetails = () => {
       )}
 
       <div className="flex flex-col moviefonts mt-10 ml-[16px] sm:ml-[60px] md:ml-[76px] gap-3">
-        <h1 className="text-base sm:text-lg md:text-2xl font-semibold">
-          Popular Reviews
-        </h1>
+        <div className="flex items-center justify-between gap-4">
+          <h1 className="text-base sm:text-lg md:text-2xl font-semibold">
+            Popular Reviews
+          </h1>
 
-        {/* show top movies but if there are not any then show text */}
+          <select
+            className="border rounded-md p-2 mr-4"
+            value={sortOption}
+            onChange={(e) => setSortOption(e.target.value)}
+          >
+            <option value="highest">Highest to Lowest</option>
+            <option value="lowest">Lowest to Highest</option>
+          </select>
+        </div>
 
         {movieDetails.data?.[0]?.topReviews.length === 0 ? (
           <p className="text-sm sm:text-base md:text-lg">
             No reviews yet. Be the first one to write a review.
           </p>
         ) : (
-          movieDetails.data?.[0]?.topReviews
-            .sort((a, b) => b.rating - a.rating)
-            .map((review) => (
-              <ReviewBody
-                key={review.id}
-                user={review.user}
-                review={review.review}
-                reviewDetails={review}
-                rating={review.rating}
-                likes={review.likes}
-                isLiked={review.isLiked}
-                isUserLoggedIn={review.isUserLoggedIn}
-                onLikeUnlike={() =>
-                  handleLikeUnlike(review._id, review.isLiked)
-                }
-                onReaction={(reaction) =>
-                  handleReaction(review._id, user.user[0]._id, reaction)
-                }
-                onUpdateReview={() => handleUpdateReview(review._id)}
-                onDeleteReview={() => handleDeleteReview(review._id)}
-              />
-            ))
+          sortReviews(movieDetails.data[0].topReviews).map((review) => (
+            <ReviewBody
+              key={review.id}
+              user={review.user}
+              review={review.review}
+              reviewDetails={review}
+              rating={review.rating}
+              likes={review.likes}
+              isLiked={review.isLiked}
+              isUserLoggedIn={review.isUserLoggedIn}
+              onLikeUnlike={() => handleLikeUnlike(review._id, review.isLiked)}
+              onReaction={(reaction) =>
+                handleReaction(review._id, user.user[0]._id, reaction)
+              }
+              onUpdateReview={() => handleUpdateReview(review._id)}
+              onDeleteReview={() => handleDeleteReview(review._id)}
+            />
+          ))
         )}
 
         <div className="flex flex-col gap-3">
