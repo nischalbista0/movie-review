@@ -11,6 +11,8 @@ const AddReviewPage = () => {
   const location = useLocation();
   const movieDetails = location.state?.movieDetails;
 
+  console.log(movieDetails);
+
   const handleRatingClick = (selectedRating) => {
     setRating(selectedRating);
   };

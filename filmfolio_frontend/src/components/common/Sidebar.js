@@ -97,7 +97,7 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
 
         <div className="absolute w-[9.8rem] top-7 left-2">
           {/* <img src={Logo} alt="" /> */}
-          <h1 className="text-3xl font-bold font-serif">FilmCrate</h1>
+          <h1 className="text-3xl font-bold font-serif">Filmfolio</h1>
         </div>
 
         {/* Sidebar Content */}

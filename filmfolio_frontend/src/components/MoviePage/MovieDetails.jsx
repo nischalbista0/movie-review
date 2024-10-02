@@ -146,50 +146,57 @@ export const MovieDetails = () => {
         return;
       }
 
-      const userReactionExists = review.reactions[reactionType]?.includes(
-        user.user[0]._id
+      // Check if the user has an existing reaction
+      const existingReaction = Object.keys(review.reactions).find((key) =>
+        review.reactions[key].includes(user.user[0]._id)
       );
 
-      let url;
-      let method;
-
-      if (userReactionExists) {
-        url = `http://localhost:3001/movies/${movieId}/reviews/${reviewID}/reactions`;
-        method = "DELETE";
-      } else {
-        url = `http://localhost:3001/movies/${movieId}/reviews/${reviewID}/reactions`;
-        method = "POST";
+      if (existingReaction) {
+        // If the user already reacted, remove the old reaction
+        await axios.delete(
+          `http://localhost:3001/movies/${movieId}/reviews/${reviewID}/reactions`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+            data: { reactionType: existingReaction },
+          }
+        );
       }
 
-      await axios({
-        method: method,
-        url: url,
-        data: { reactionType: reactionType },
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      // Add the new reaction
+      await axios.post(
+        `http://localhost:3001/movies/${movieId}/reviews/${reviewID}/reactions`,
+        { reactionType: reactionType },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
 
+      // Update the movie details in state
       setMovieDetails((prevMovieDetails) => {
         const updatedReviews = prevMovieDetails.data[0].topReviews.map(
           (review) => {
             if (review._id === reviewID) {
               const updatedReactions = { ...review.reactions };
 
-              if (userReactionExists) {
-                updatedReactions[reactionType] = updatedReactions[
-                  reactionType
+              // Clear previous reaction if exists
+              if (existingReaction) {
+                updatedReactions[existingReaction] = updatedReactions[
+                  existingReaction
                 ].filter((userID) => userID !== user.user[0]._id);
-
-                if (updatedReactions[reactionType].length === 0) {
-                  delete updatedReactions[reactionType];
+                if (updatedReactions[existingReaction].length === 0) {
+                  delete updatedReactions[existingReaction];
                 }
-              } else {
-                if (!updatedReactions[reactionType]) {
-                  updatedReactions[reactionType] = [];
-                }
-                updatedReactions[reactionType].push(user.user[0]._id);
               }
+
+              // Add the new reaction
+              if (!updatedReactions[reactionType]) {
+                updatedReactions[reactionType] = [];
+              }
+              updatedReactions[reactionType].push(user.user[0]._id);
 
               return {
                 ...review,
@@ -255,6 +262,50 @@ export const MovieDetails = () => {
       });
     } catch (error) {
       console.log(error);
+    }
+  };
+
+  // Add Review
+  const [rating, setRating] = useState(0);
+  const [reviewText, setReviewText] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleRatingClick = (selectedRating) => {
+    setRating(selectedRating);
+  };
+
+  const handleReviewChange = (event) => {
+    setReviewText(event.target.value);
+  };
+
+  const handleSubmit = async () => {
+    try {
+      const reviewData = {
+        rating: rating,
+        review: reviewText,
+      };
+
+      await axios.post(
+        `http://localhost:3001/movies/${movieDetails.data?.[0].id}/reviews`,
+        reviewData,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      // Reset the state after submitting the review (optional)
+      setRating(0);
+      setReviewText("");
+      setSubmitted(true);
+
+      toast.success("Review submitted successfully");
+
+      window.location.href = "/movie/" + movieDetails.data?.[0].id;
+    } catch (error) {
+      // console.log(error.response.data);
+      toast.error(error.response.data.error);
     }
   };
 
@@ -368,6 +419,62 @@ export const MovieDetails = () => {
         </div>
       )}
 
+      <div>
+        <div className="flex items-center justify-center h-full">
+          <div className="p-4 mt-8 rounded-xl shadow-lg bg-white mx-8 lg:mx-20 w-full moviefonts">
+            <h2 className="text-xl sm:text-2xl font-bold mb-4">
+              Share Your Review of{" "}
+              <span className="text-[#305973]">
+                {movieDetails.data?.[0].movie.title}
+              </span>
+              !
+            </h2>
+
+            <div className="flex  items-center mb-4">
+              <span className="mr-2 font-normal">Rating :</span>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <svg
+                  key={star}
+                  className={`w-7 h-7 cursor-pointer ${
+                    star <= rating ? "text-yellow-500" : "text-gray-300"
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="https://www.w3.org/2000/svg"
+                  onClick={() => handleRatingClick(star)}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 2l2.76 6.39L22 9.3l-5 4.1 1.9 5.74L12 17.25l-4.9 3.89 1.9-5.75-5-4.1 7.24-0.92L12 2z"
+                  />
+                </svg>
+              ))}
+            </div>
+            <div className="mb-4">
+              <h3 className="text-base sm:text-lg font-medium moviefonts mb-4">
+                Your Review :
+              </h3>
+              <textarea
+                id="reviewText"
+                className="w-full text-xs sm:text-sm px-4 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300"
+                rows="4"
+                value={reviewText}
+                onChange={handleReviewChange}
+              ></textarea>
+            </div>
+            <button
+              className="w-32 bg-[#305973] text-white font-medium rounded-md px-4 py-2 hover:bg-[#204d64] transition"
+              onClick={handleSubmit}
+            >
+              Submit
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div className="flex flex-col moviefonts mt-10 ml-[16px] sm:ml-[60px] md:ml-[76px] gap-3">
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-base sm:text-lg md:text-2xl font-semibold">
@@ -452,34 +559,6 @@ export const MovieDetails = () => {
             </div>
           ))}
         </div>
-
-        {user?.user[0]?.userType !== "admin" && (
-          <div>
-            <div className="fixed bottom-3 right-3">
-              <button
-                className="floating-button bg-[#08BA0C] text-white rounded-[50%] p-3 sm:p-4 md:p-6"
-                onClick={() => {
-                  navigate("/writeReviews", {
-                    state: {
-                      movieDetails: movieDetails.data?.[0],
-                    },
-                  });
-                }}
-              >
-                <svg
-                  xmlns="https://www.w3.org/2000/svg"
-                  className="w-4 h-4 sm:w-5 sm:h-5 md:h-6 md:w-6"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    fill="currentColor"
-                    d="M11.883 3.007L12 3a1 1 0 0 1 .993.883L13 4v7h7a1 1 0 0 1 .993.883L21 12a1 1 0 0 1-.883.993L20 13h-7v7a1 1 0 0 1-.883.993L12 21a1 1 0 0 1-.993-.883L11 20v-7H4a1 1 0 0 1-.993-.883L3 12a1 1 0 0 1 .883-.993L4 11h7V4a1 1 0 0 1 .883-.993L12 3l-.117.007Z"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </>
   );

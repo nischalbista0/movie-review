@@ -71,30 +71,40 @@ export default function AllReviews() {
         return;
       }
 
-      const userReactionExists = review.reactions[reactionType]?.includes(
-        user.user[0]._id
+      const userID = user.user[0]._id;
+
+      // Check for existing reactions
+      const currentReactions = Object.keys(review.reactions).filter((type) =>
+        review.reactions[type]?.includes(userID)
       );
 
-      let url;
-      let method;
-
-      if (userReactionExists) {
-        url = `http://localhost:3001/movies/${movieDetails.id}/reviews/${reviewID}/reactions`;
-        method = "DELETE";
-      } else {
-        url = `http://localhost:3001/movies/${movieDetails.id}/reviews/${reviewID}/reactions`;
-        method = "POST";
-      }
-
-      await axios({
-        method: method,
-        url: url,
-        data: { reactionType: reactionType },
+      // Prepare the config object
+      const config = {
+        url: `http://localhost:3001/movies/${movieDetails.id}/reviews/${reviewID}/reactions`,
+        method: "POST",
+        data: { reactionType },
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-      });
+      };
 
+      // If the user has an existing reaction, remove it first
+      if (currentReactions.length > 0) {
+        // Delete the current reaction
+        await axios({
+          method: "DELETE",
+          url: config.url,
+          data: { reactionType: currentReactions[0] }, // remove the first found reaction
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+      }
+
+      // Now add the new reaction
+      await axios(config);
+
+      // Fetch updated reviews
       const updatedReviewsResponse = await axios.get(
         `http://localhost:3001/movies/${movieDetails.id}/reviews`,
         {
