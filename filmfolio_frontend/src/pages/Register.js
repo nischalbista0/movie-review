@@ -119,7 +119,7 @@ export default function Register() {
         </div>
         <div className="bg-[#F6F7D3] w-full md:max-w-md lg:max-w-full md:mx-auto md:w-1/2 px-6 lg:px-16 xl:px-12 flex items-center justify-center my-4">
           <div className="w-full h-100">
-            <h1 className="text-5xl font-bold font-serif py-10">FilmCrate</h1>
+            <h1 className="text-5xl font-bold font-serif py-10">Filmfolio</h1>
 
             <h1 className="text-4xl md:text-4xl font-bold leading-tight mt-3 mb-2 texts">
               REGISTER

@@ -73,7 +73,7 @@ export default function Login() {
           flex items-center justify-center my-4"
         >
           <div className="w-full h-fit">
-            <h1 className="text-5xl font-bold font-serif">FilmCrate</h1>
+            <h1 className="text-5xl font-bold font-serif">Filmfolio</h1>
 
             <h1 className="text-4xl md:text-4xl font-bold leading-tight mt-10 mb-2 texts">
               LOGIN
