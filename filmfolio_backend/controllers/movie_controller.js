@@ -115,7 +115,7 @@ const getMovieDetails = async (req, res) => {
     }));
 
     let reviewSummary = "";
-    if (allReviewsResponse.length >= 3) {
+    if (allReviewsResponse.length >= 0) {
       const tfidf = new TfIdf();
       const adjectiveCounts = {}; // Object to keep track of adjective frequencies
 
