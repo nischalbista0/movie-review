@@ -1,39 +1,42 @@
 import axios from "axios";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { UserContext } from "../../context/UserContext";
-import "./otherStyles.css";
-import { isLoggedInAtom } from "../../atoms/atoms";
 import { useAtom } from "jotai";
+import { isLoggedInAtom } from "../../atoms/atoms";
+import "./otherStyles.css";
 
 export const PopularMoviesBody = ({ setActiveTab, setMovieId, setMovie }) => {
   const [slidesPerView, setSlidesPerView] = useState(6);
   const [hoveredSlide, setHoveredSlide] = useState(null);
-
   const [popularMovies, setPopularMovies] = useState([]);
   const [isLoggedIn] = useAtom(isLoggedInAtom);
-
-  // const handleMovieDetailsClick = ({}) => {
-  //   setMovieId(popularMovies[hoveredSlide].id);
-  //   setActiveTab("movie details");
-  // };
   const navigate = useNavigate();
 
   useEffect(() => {
     axios
-      .get("http://localhost:3001/movies/popular/", {})
+      .get("http://localhost:3001/movies/popular/")
       .then((response) => {
-        setPopularMovies(response.data.results);
+        const shuffledMovies = shuffleArray(response.data.results);
+        setPopularMovies(shuffledMovies);
       })
       .catch((error) => {
         console.log(error);
       });
   }, []);
+
+  // Shuffle the array of movies
+  const shuffleArray = (array) => {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  };
 
   useEffect(() => {
     const handleResize = () => {
@@ -68,7 +71,7 @@ export const PopularMoviesBody = ({ setActiveTab, setMovieId, setMovie }) => {
 
   return (
     <div>
-      {popularMovies && popularMovies.length > 0 ? ( // Add conditional check
+      {popularMovies && popularMovies.length > 0 ? (
         <Swiper
           slidesPerView={slidesPerView}
           centeredSlides={false}
@@ -79,7 +82,7 @@ export const PopularMoviesBody = ({ setActiveTab, setMovieId, setMovie }) => {
         >
           {popularMovies.map((popularMovie, index) => (
             <SwiperSlide
-              key={index}
+              key={popularMovie.id} // Use unique movie ID as key
               className="flex flex-col cursor-pointer"
               onMouseEnter={() => handleSlideMouseEnter(index)}
               onMouseLeave={handleSlideMouseLeave}
@@ -94,7 +97,7 @@ export const PopularMoviesBody = ({ setActiveTab, setMovieId, setMovie }) => {
             >
               <img
                 src={`https://image.tmdb.org/t/p/w500/${popularMovie.backdrop_path}`}
-                alt={popularMovie.text}
+                alt={popularMovie.title} // Use the correct property for alt text
                 className="bg-center aspect-square"
               />
               <div

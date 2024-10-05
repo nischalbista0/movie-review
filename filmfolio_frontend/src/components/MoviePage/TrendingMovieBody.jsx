@@ -1,20 +1,17 @@
 import axios from "axios";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 // Import Swiper React components
 import { Swiper, SwiperSlide } from "swiper/react";
-
 // Import Swiper styles
 import { useNavigate } from "react-router-dom";
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation"; // Import Navigation styles
 import { Pagination, Navigation } from "swiper/modules";
-
-import { UserContext } from "../../context/UserContext";
-import { TrendingMovie } from "./TrendingMovie";
-import "./trendingStyles.css";
 import { isLoggedInAtom } from "../../atoms/atoms";
 import { useAtom } from "jotai";
+import { TrendingMovie } from "./TrendingMovie";
+import "./trendingStyles.css";
 
 const TrendingMoviesBody = ({
   setActiveTab,
@@ -23,10 +20,8 @@ const TrendingMoviesBody = ({
   movieDetails,
   setMovieDetails,
 }) => {
-  // const { user } = useContext(UserContext);
   const [isLoggedIn] = useAtom(isLoggedInAtom);
   const [trendingMovies, setTrendingMovies] = useState([]);
-
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -37,14 +32,22 @@ const TrendingMoviesBody = ({
         },
       })
       .then((response) => {
-        setTrendingMovies(response.data.results);
+        const shuffledMovies = shuffleArray(response.data.results);
+        setTrendingMovies(shuffledMovies);
       })
       .catch((error) => {
         console.log(error);
       });
   }, []);
 
-  console.log(trendingMovies);
+  // Shuffle the array of movies
+  const shuffleArray = (array) => {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  };
 
   return (
     <div className="relative flex items-center h-[40vh] justify-center md:h-[100vh] cursor-pointer">
